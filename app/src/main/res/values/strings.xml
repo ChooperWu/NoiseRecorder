@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">NoiseRecorder</string>
+    <string name="notification_channel_name">噪音監控服務</string>
+    <string name="notification_channel_description">持續監控環境噪音並於超過閾值時自動錄音</string>
+    <string name="action_stop">停止偵測</string>
+</resources>
