@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,10 +34,14 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +57,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val settings by viewModel.settings.collectAsState()
+    var showChangelogDialog by remember { mutableStateOf(false) }
 
     // 匯出設定檔 Launcher (SAF CreateDocument)
     val exportLauncher = rememberLauncherForActivityResult(
@@ -276,7 +282,79 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 5. 關於與版本歷程
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(text = "關於應用程式", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "NoiseRecorder v1.0.0 (Build 1)",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        TextButton(onClick = { showChangelogDialog = true }) {
+                            Text("版本歷程")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "支援系統：Android 13+ (API 33+)\n架構：Kotlin / Jetpack Compose / Material 3",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.outline,
+                        lineHeight = 16.sp
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // 版本歷程對話框
+        if (showChangelogDialog) {
+            AlertDialog(
+                onDismissRequest = { showChangelogDialog = false },
+                title = { Text("版本更新歷程") },
+                text = {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    ) {
+                        Text(
+                            text = "v1.0.0 (2026-10-14)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "• 起始畫面：實時分貝量條、狀態指示燈、噪音超標自動錄音、靜音緩衝計時機制。\n" +
+                                   "• 前台服務：支援螢幕關閉與背景持續監測，通知欄提供即時分貝與停止快捷。\n" +
+                                   "• 錄音管理：檔案列表、內建播放器（播放/暫停/Seek）、單檔改名/複製/刪除、多選批次管理。\n" +
+                                   "• 設定功能：噪音閥值與停止時間滑桿微調、M4A 與 WAV 格式切換、設定檔 JSON 匯出與匯入（SAF）。",
+                            fontSize = 13.sp,
+                            lineHeight = 20.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showChangelogDialog = false }) {
+                        Text("關閉")
+                    }
+                }
+            )
         }
     }
 }
