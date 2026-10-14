@@ -1,5 +1,10 @@
 package com.joeywu.noiserecorder.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,6 +54,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.joeywu.noiserecorder.data.AudioFormatType
+import com.joeywu.noiserecorder.ui.theme.SafeGreen
+import com.joeywu.noiserecorder.ui.theme.WarningOrange
 import com.joeywu.noiserecorder.ui.viewmodels.SettingsViewModel
 import kotlinx.coroutines.launch
 
@@ -284,7 +291,61 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 5. 關於與版本歷程
+            // 5. 背景與鎖定螢幕運作
+            val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? PowerManager }
+            val isIgnoringBattery = powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = "背景與鎖定螢幕運作", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "本 App 已啟用 CPU 喚醒鎖（PARTIAL_WAKE_LOCK）。為確保鎖定螢幕數小時後仍不被 Android 系統省電凍結，建議將電池設定為「不受限制」。",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.outline,
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isIgnoringBattery) "狀態：已獲取無限制設定" else "狀態：受系統省電限制",
+                            color = if (isIgnoringBattery) SafeGreen else WarningOrange,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        if (!isIgnoringBattery) {
+                            OutlinedButton(
+                                onClick = {
+                                    try {
+                                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                            data = Uri.parse("package:${context.packageName}")
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        try {
+                                            context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                                        } catch (_: Exception) {}
+                                    }
+                                },
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("前往設定", fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 6. 關於與版本歷程
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -299,7 +360,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             Text(text = "關於應用程式", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "NoiseRecorder v1.0.0 (Build 1)",
+                                text = "NoiseRecorder v1.0.1 (Build 2)",
                                 fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium
@@ -331,6 +392,22 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     Column(
                         modifier = Modifier.verticalScroll(rememberScrollState())
                     ) {
+                        Text(
+                            text = "v1.0.1 (2026-10-14)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "• 鎖定螢幕運作支援：整合 CPU 喚醒鎖（PARTIAL_WAKE_LOCK），確保螢幕關閉時維持運算。\n" +
+                                   "• 背景省電設定：新增電池最佳化豁免狀態檢測與引導設定按鈕。\n" +
+                                   "• 專屬圖樣更新：替換獨立設計之麥克風、動態分貝波形與錄音指示燈應用程式圖示。\n",
+                            fontSize = 13.sp,
+                            lineHeight = 20.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = "v1.0.0 (2026-10-14)",
                             fontWeight = FontWeight.Bold,

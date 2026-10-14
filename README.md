@@ -2,7 +2,7 @@
 
 專為 Android 13（API 33）及以上版本設計的智慧噪音偵測與自動錄音應用程式。
 
-當前版本：`v1.0.0`（詳細歷程請參閱 [CHANGELOG.md](CHANGELOG.md)）
+當前版本：`v1.0.1`（詳細歷程請參閱 [CHANGELOG.md](CHANGELOG.md)）
 
 ## 功能特點
 

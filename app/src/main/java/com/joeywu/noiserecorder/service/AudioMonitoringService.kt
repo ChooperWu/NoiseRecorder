@@ -13,6 +13,7 @@ import android.media.MediaRecorder
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.joeywu.noiserecorder.MainActivity
 import com.joeywu.noiserecorder.NoiseRecorderApp
@@ -58,6 +59,7 @@ class AudioMonitoringService : Service() {
     private var audioRecord: AudioRecord? = null
     private var isRecordingLoopActive = false
     private var recordThread: Thread? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     private var currentWriter: IAudioWriter? = null
     private var currentRecordingFile: File? = null
@@ -116,6 +118,18 @@ class AudioMonitoringService : Service() {
         if (isRecordingLoopActive) return
 
         startForegroundServiceNotification()
+
+        // 獲取 WakeLock 避免螢幕關閉時 CPU 進入休眠
+        try {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                "NoiseRecorder:MonitoringWakeLock"
+            ).apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+        } catch (_: Exception) {}
 
         val sampleRate = 44100
         val channelConfig = AudioFormat.CHANNEL_IN_MONO
@@ -278,6 +292,14 @@ class AudioMonitoringService : Service() {
         audioRecord = null
 
         stopCurrentWriter()
+
+        // 釋放 WakeLock
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (_: Exception) {}
+        wakeLock = null
 
         _status.value = MonitoringStatus.IDLE
         _decibel.value = 0.0
